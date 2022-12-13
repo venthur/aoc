@@ -1,5 +1,7 @@
+import functools
+
+
 def cmp(l1, l2):
-    print(f'{l1} {l2}')
     if isinstance(l1, int) and isinstance(l2, int):
         if l1 < l2:
             return -1
@@ -52,5 +54,26 @@ def task1(input_):
     return sum(indices)
 
 
+def task2(input_):
+    with open(input_) as fh:
+        lines = fh.read().splitlines()
+
+    packets = []
+    for line in lines:
+        if not line:
+            continue
+        packets.append(eval(line))
+    packets.append([[2]])
+    packets.append([[6]])
+
+    packets.sort(key=functools.cmp_to_key(cmp))
+    i = packets.index([[2]]) + 1
+    j = packets.index([[6]]) + 1
+    return i * j
+
+
 assert task1('test_input.txt') == 13
 print(task1('input.txt'))
+
+assert task2('test_input.txt') == 140
+print(task2('input.txt'))
