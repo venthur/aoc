@@ -1,15 +1,26 @@
-def generate_next_states(human, boss, effects, mana_spent):
-    # human:
-
-    # run effects
+def apply_effects(human, boss, effects):
+    human = human[:]
+    boss = boss[:]
+    effects = effects[:]
     for i, name, turns_left in enumerate(effects):
         if name == 'shield' and turns_left == 0:
             human[1] -= 7
+            effects[i][1] -= 1
+        elif name == 'poison' and turns_left > 0:
+            boss[0] -= 3
             effects[i][1] -= 1
         elif name == 'recharge' and turns_left > 0:
             human[3] += 101
             effects[i][1] -= 1
     effects = [e for e in effects if e[1] >= 0]
+    return human, boss, effects
+
+
+def generate_next_states(human, boss, effects, mana_spent):
+    # human:
+
+    # run effects
+    human, boss, effects = apply_effects(human, boss, effects)
 
     future_states = {
         spell: [human[:], boss[:], effects[:], mana_spent]
@@ -41,11 +52,8 @@ def generate_next_states(human, boss, effects, mana_spent):
     # boss:
 
     # run effects
-    for i, name, turns_left in enumerate(effects):
-        if name == 'poison' and turns_left > 0:
-            boss[0] -= 3
-            effects[i][1] -= 1
-    effects = [e for e in effects if e[1] >= 0]
+    human, boss, effects = apply_effects(human, boss, effects)
+
 
     return possible_states
 
