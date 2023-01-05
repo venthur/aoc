@@ -7,7 +7,6 @@ shield = dict(cost=113, damage=0, heal=0, armor=7, mana=0, duration=6)
 poison = dict(cost=173, damage=3, heal=0, armor=0, mana=0, duration=6)
 recharge = dict(cost=229, damage=0, heal=0, armor=0, mana=101, duration=5)
 
-spells = [drain, shield, poison, recharge] # woot? correct solution but one spell missing
 spells = [magic_missile, drain, shield, poison, recharge]
 
 
@@ -30,8 +29,13 @@ def apply_effects(human, boss, effects):
     return human, boss, effects
 
 
-def generate_next_states(human, boss, effects, mana_spent):
+def generate_next_states(human, boss, effects, mana_spent, hard=False):
     # human:
+    if hard:
+        human['hp'] -= 1
+        if human['hp'] <= 0:
+            return [[human, boss, effects, mana_spent]]
+
     human, boss, effects = apply_effects(human, boss, effects)
     if boss['hp'] <= 0:
         return [[human, boss, effects, mana_spent]]
@@ -59,12 +63,17 @@ def generate_next_states(human, boss, effects, mana_spent):
     states2 = []
     for human, boss, effects, mana_spent in states:
 
+        if hard:
+            human['hp'] -= 1
+            if human['hp'] <= 0:
+                return [[human, boss, effects, mana_spent]]
+
         human, boss, effects = apply_effects(human, boss, effects)
         if boss['hp'] <= 0:
             states2.append([human, boss, effects, mana_spent])
             continue
 
-        human['hp'] -= min(boss['damage'] - human['armor'], 1)
+        human['hp'] -= max(boss['damage'] - human['armor'], 1)
         states2.append([human, boss, effects, mana_spent])
 
     return states2
@@ -84,7 +93,7 @@ def task1(fn):
     states = [[human, boss, [], 0]]
     while states:
         human, boss, effects, mana_spent = states.pop()
-        print(f'{human=}\n{boss=}\n{effects=}\n{mana_spent=} {min_mana=} {len(states)=}\n')
+        #print(f'{human=}\n{boss=}\n{effects=}\n{mana_spent=} {min_mana=} {len(states)=}\n')
         if human['hp'] <= 0:
             continue
         if boss['hp'] <= 0:
@@ -100,6 +109,36 @@ def task1(fn):
     return min_mana
 
 
+def task2(fn):
+    with open(fn) as fh:
+        lines = fh.read().splitlines()
+
+    hp = int(lines[0].split()[-1])
+    damage = int(lines[1].split()[-1])
+
+    boss = dict(hp=hp, armor=0, damage=damage, mana=0)
+    human = dict(hp=50, armor=0, damage=0, mana=500)
+
+    min_mana = None
+    states = [[human, boss, [], 0]]
+    while states:
+        human, boss, effects, mana_spent = states.pop()
+        #print(f'{human=}\n{boss=}\n{effects=}\n{mana_spent=} {min_mana=} {len(states)=}\n')
+        if human['hp'] <= 0:
+            continue
+        if boss['hp'] <= 0:
+            if min_mana is None or mana_spent < min_mana:
+                min_mana = mana_spent
+            continue
+        for s in generate_next_states(human, boss, effects, mana_spent, hard=True):
+            states.append(s)
+        # prune states that are worse than our current best ones
+        if min_mana is not None:
+            states = [s for s in states if s[-1] < min_mana]
+
+    return min_mana
+
+
 print(task1('input.txt'))
 
-1269
+print(task2('input.txt'))
