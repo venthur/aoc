@@ -7,15 +7,14 @@ def task1(fn):
 
     sets = [[[], 0, 0]]
     for w in weights[::-1]:
-        print(len(sets))
         sets2 = set()
         for a, b, c in sets:
             if sum(list(a) + [w]) <= target:
-                sets2.add((tuple(list(a) + [w]), b, c))
+                sets2.add((tuple(list(a) + [w]), *sorted((b, c))))
             if b + w <= target:
-                sets2.add((tuple(a), b + w, c))
+                sets2.add((tuple(a), *sorted((b + w, c))))
             if c + w <= target:
-                sets2.add((tuple(a), b, c + w))
+                sets2.add((tuple(a), *sorted((b, c + w))))
         sets = list(sets2)
 
     candiates = [a for [a, b, c] in sets if sum(a) == b == c == target]
@@ -46,17 +45,16 @@ def task2(fn):
 
     sets = [[[], 0, 0, 0]]
     for w in weights[::-1]:
-        print(len(sets))
         sets2 = set()
         for a, b, c, d in sets:
             if sum(list(a) + [w]) <= target:
-                sets2.add((tuple(list(a) + [w]), b, c, d))
+                sets2.add((tuple(list(a) + [w]), *sorted((b, c, d))))
             if b + w <= target:
-                sets2.add((tuple(a), b + w, c, d))
+                sets2.add((tuple(a), *sorted((b + w, c, d))))
             if c + w <= target:
-                sets2.add((tuple(a), b, c + w, d))
+                sets2.add((tuple(a), *sorted((b, c + w, d))))
             if d + w <= target:
-                sets2.add((tuple(a), b, c, d + w))
+                sets2.add((tuple(a), *sorted((b, c, d + w))))
         sets = list(sets2)
 
     candiates = [a for [a, b, c, d] in sets if sum(a) == b == c == d == target]
@@ -77,8 +75,8 @@ def task2(fn):
 
     return minp
 
-#assert task1('test_input.txt') == 99
-#print(task1('input.txt'))
+assert task1('test_input.txt') == 99
+print(task1('input.txt'))
 
 assert task2('test_input.txt') == 44
 print(task2('input.txt'))
