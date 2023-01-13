@@ -40,10 +40,25 @@ def task2(fn):
             data2.append((c, [i for i in p.split('/')]))
     data = data2[:]
 
-    #for i in range(1):
+    # check when we have the first repetition...
     for i in range(1000000000):
-        if i % 1000 == 0:
-            print(f'{100*i/1000000000}')
+        for cmd, params in data:
+            if cmd == 's':
+                programs = programs[-params:] + programs[:-params]
+            elif cmd == 'x':
+                c = programs[params[0]]
+                programs[params[0]] = programs[params[1]]
+                programs[params[1]] = c
+            elif cmd == 'p':
+                ai = programs.index(params[0])
+                bi = programs.index(params[1])
+                programs[ai] = params[1]
+                programs[bi] = params[0]
+        if programs == list('abcdefghijklmnop'):
+            break
+
+    # ... and shorten
+    for i in range(1000000000 % (i+1)):
         for cmd, params in data:
             if cmd == 's':
                 programs = programs[-params:] + programs[:-params]
