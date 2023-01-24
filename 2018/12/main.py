@@ -12,8 +12,8 @@ def task1(fn, generations):
 
     for i in range(generations):
 
-        if i % 1000 == 0:
-            print(i)
+        #if i % 1000 == 0:
+        #    print(i, sum(map(lambda x: x[0], filter(lambda x: x[1] == '#', state.items()))))
 
         while ''.join([v for _, v in sorted(state.items())][:2]) != '..':
             state[min(state.keys())-1] = '.'
@@ -39,4 +39,7 @@ def task1(fn, generations):
 assert task1('test_input.txt', 20) == 325
 print(task1('input.txt', 20))
 
-print(task1('input.txt', 50000000000))
+# number is too large to compute, return the sum avert each 1000 iterations and
+# see the pattern: (50000000000 // 1000) * 63000 + 905
+#print(task1('input.txt', 50000000000))
+print(3150000000905)
