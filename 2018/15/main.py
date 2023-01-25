@@ -1,3 +1,6 @@
+from itertools import count
+
+
 def parse_input(fn):
     with open(fn) as fh:
         lines = fh.read().splitlines()
@@ -34,11 +37,55 @@ def pprint(cave, units):
         img[y][x] = t
 
     print('\n'.join([''.join(row) for row in img]))
+    print(units)
 
 
 def task1(fn):
     cave, units = parse_input(fn)
     pprint(cave, units)
+
+    for round_ in count(1):
+
+        # sort units in "reading order"
+        units.sort()
+        units.sort(key=lambda x: x[1])
+
+        for unit in units:
+
+            # targets
+            enemies = [u for u in units if u[-1] != unit[-1]]
+
+            # in range
+            in_range = set()
+            for x, y, _, _, _ in enemies:
+                for xi, yi in (x+1, y), (x-1, y), (x, y+1), (x, y-1):
+                    if cave[xi, yi] == '.':
+                        in_range.add((xi, yi))
+
+            for x, y, _, _, _ in units:
+                if [x, y] == unit[:2]:
+                    continue
+                in_range.discard((x, y))
+
+            if unit[:2] not in in_range:
+
+            # reachable
+
+            # nearest
+
+            # choose
+
+            # distance
+
+            # step
+
+        print(f'Round {round_}:')
+        pprint(cave, units)
+
+        if len({race for _, _, _, _, race in units}) == 1:
+            break
+
+    return round_ * sum([hp for _, _, hp, _, _ in units])
 
 
 assert task1('test_input.txt') == 27730
