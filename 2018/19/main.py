@@ -117,44 +117,16 @@ def task1(fn):
     return registers[0]
 
 
+def task2(fn):
+    D = 10551389
+    s = 0
+    for i in range(1, D+1):
+        if D % i == 0:
+            s += i
+    return s
+
+
 assert task1('test_input.txt') == 7
 print(task1('input.txt'))
 
-
-# #ip 3         A B C ip D E
-# addi 3 16 3   
-# seti 1 2 5
-# seti 1 3 2
-# mulr 5 2 1
-# eqrr 1 4 1
-# addr 1 3 3
-# addi 3 1 3
-# addr 5 0 0
-# addi 2 1 2
-# gtrr 2 4 1
-# addr 3 1 3
-# seti 2 5 3
-# addi 5 1 5
-# gtrr 5 4 1
-# addr 1 3 3
-# seti 1 2 3
-# mulr 3 3 3
-# addi 4 2 4
-# mulr 4 4 4
-# mulr 3 4 4
-# muli 4 11 4
-# addi 1 6 1
-# mulr 1 3 1
-# addi 1 21 1
-# addr 4 1 4
-# addr 3 0 3
-# seti 0 3 3
-# setr 3 4 1
-# mulr 1 3 1
-# addr 3 1 1
-# mulr 3 1 1
-# muli 1 14 1
-# mulr 1 3 1
-# addr 4 1 4
-# seti 0 3 0
-# seti 0 7 3
+print(task2('input.txt'))
