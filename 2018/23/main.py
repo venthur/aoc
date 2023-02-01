@@ -37,22 +37,47 @@ def task2(fn):
 
         bots.append((*pos, r))
 
-    for scale in 100, 10, 1:
-        xs, ys, zs, rs = zip(*bots)
-        count = dict()
-        to_remove = set()
-        for x in range((min(xs)-max(rs))//scale, (max(xs)+max(rs))//scale+1):
-            for y in range((min(ys)-max(rs))//scale, (max(ys)+max(rs))//scale+1):
-                for z in range((min(zs)-max(rs))//scale, (max(zs)+max(rs))//scale+1):
-                    for bot in bots:
-                        if abs(bot[0]//scale - x) + abs(bot[1]//scale - y) + abs(bot[2]//scale - z) <= bot[-1]//scale:
-                            count[x,y,z] = count.get((x, y, z), 0) + 1
-                        else:
-                            to_remove.add(bot)
-        for bot in to_remove:
-            print(f'removing {bot}')
-            bots.remove(bot)
-        return
+    xs, ys, zs, rs = zip(*bots)
+    xs = list(xs) + [0]
+    ys = list(ys) + [0]
+    zs = list(zs) + [0]
+
+    dist = 1
+    while (
+        dist < max(xs) - min(xs) or
+        dist < max(ys) - min(ys) or
+        dist < max(zs) - min(zs)
+    ):
+        dist *= 2
+
+    while True:
+        target_count = 0
+        best = None
+        best_val = None
+        for x in range(min(xs), max(xs)+1, dist):
+            for y in range(min(ys), max(ys)+1, dist):
+                for z in range(min(zs), max(zs)+1, dist):
+                    count = 0
+                    for bx, by, bz, br in bots:
+                        mdist = abs(bx - x) + abs(by - y) + abs(bz - z)
+                        if (mdist - br) // dist <= 0:
+                            count += 1
+                    if count > target_count:
+                        target_count = count
+                        best_val = abs(x) + abs(y) + abs(z)
+                        best = (x, y, z)
+                    elif count == target_count:
+                        if best_val is None or abs(x) + abs(y) + abs(z) < best_val:
+                            best_val = abs(x) + abs(y) + abs(z)
+                            best = (x, y, z)
+
+        if dist == 1:
+            return best_val
+
+        xs = [best[0] - dist, best[0] + dist]
+        ys = [best[1] - dist, best[1] + dist]
+        zs = [best[2] - dist, best[2] + dist]
+        dist //= 2
 
 
 assert task1('test_input.txt') == 7
