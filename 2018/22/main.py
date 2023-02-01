@@ -45,11 +45,13 @@ def task2(fn):
     # (heuristic, time, x, y, gear)
     heapq.heappush(pq, (0, 0, 0, 0, 't'))
     seen = set()
-    seen.add((0, 0, 't'))
     while True:
         _, t, x, y, gear = heapq.heappop(pq)
 
-        #print(t, x, y, gear)
+        if (x, y, gear) in seen:
+            continue
+        seen.add((x, y, gear))
+
         if (x, y, gear) == (xt, yt, 't'):
             return t
 
@@ -63,7 +65,6 @@ def task2(fn):
                 type_ == 2 and gear == 't' and candidate == 'n' or
                 type_ == 2 and gear == 'n' and candidate == 't'
             ) and (x, y, candidate) not in seen:
-                seen.add((x, y, candidate))
                 heapq.heappush(pq, (h(x, y)+t+7, t+7, x, y, candidate))
 
         for xn, yn in (x-1, y), (x+1, y), (x, y-1), (x, y+1):
@@ -76,7 +77,6 @@ def task2(fn):
                 gear == 'n' and type_ in (1, 2) or
                 gear == 't' and type_ in (0, 2)
             ) and (xn, yn, gear) not in seen:
-                seen.add((xn, yn, gear))
                 heapq.heappush(pq, (h(xn, yn)+t+1, t+1, xn, yn, gear))
 
 
