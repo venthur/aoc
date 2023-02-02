@@ -91,9 +91,10 @@ def task1(fn):
             defender = [d for d in groups if d[1] == defender_id][0]
             defender_idx = groups.index(defender)
             # attack
-            print(f'{attacker} attacks {defender}')
             dmg = damage(attacker, defender)
-            defender[2] = defender[3] // (defender[2] * defender[3] - dmg)
+            kills = dmg // defender[3]
+            print(f'{attacker} attacks {defender} dealing {dmg}, killing {kills}')
+            defender[2] -= kills
             groups[defender_idx] = defender[:]
 
         groups = [g for g in groups if g[2] > 0]
