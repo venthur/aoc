@@ -89,7 +89,7 @@ def compute2(phase, code):
 
     amp = 0
     while any(running):
-
+        # print(f'{io=} {running=} {ptrs=} {first=} {amp=}')
         ptr = ptrs[amp]
         while running[amp]:
             instr = code[ptr]
@@ -116,7 +116,6 @@ def compute2(phase, code):
                 ci = instr // 10000 % 10
                 c = code[cp] if not ci else cp
 
-            # print(f'{ptr=} {code[ptr]=}, {a, b, c=} {ai, bi, ci=} {io=}')
             match op:
                 case 1:
                     code[cp] = a + b
@@ -155,7 +154,7 @@ def compute2(phase, code):
         amp += 1
         amp %= 5
 
-    return io[-1]
+    return io[0]
 
 
 def task2(fn):
