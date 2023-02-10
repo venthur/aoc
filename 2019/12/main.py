@@ -1,5 +1,6 @@
 import re
 from itertools import combinations, count
+from math import gcd
 
 
 def task1(fn, steps):
@@ -49,26 +50,32 @@ def task2(fn):
         ).groups()
         moons.append([int(n) for n in groups] + [0, 0, 0])
 
-    seen = set()
-    for step in count(0):
-        # gravity
-        for a, b in combinations(moons, 2):
-            for i in range(3):
+    periods = []
+    for i in range(3):
+        seen = set()
+        for step in count(0):
+            # gravity
+            for a, b in combinations(moons, 2):
                 if a[i] > b[i]:
                     a[i+3] -= 1
                     b[i+3] += 1
                 elif a[i] < b[i]:
                     a[i+3] += 1
                     b[i+3] -= 1
-        # velocity
-        for moon in moons:
-            for i in range(3):
+            # velocity
+            for moon in moons:
                 moon[i] += moon[i+3]
 
-        fmoons = tuple(tuple(moon) for moon in moons)
-        if fmoons in seen:
-            return step
-        seen.add(fmoons)
+            vps = tuple((moon[i], moon[i+3]) for moon in moons)
+            if vps in seen:
+                periods.append(len(seen))
+                break
+            seen.add(vps)
+
+    tmp = periods[0] * periods[1] // gcd(periods[0], periods[1])
+    ans = tmp * periods[2] // gcd(tmp, periods[2])
+
+    return ans
 
 
 assert task1('test_input0.txt', 10) == 179
