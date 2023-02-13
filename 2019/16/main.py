@@ -18,10 +18,8 @@ def fft(nrs, phases):
         print(phase, end='\r')
         nrs2 = []
         for i, nr in enumerate(nrs):
-            #print(f'{phase} {i}\r', end='')
             p = pattern(i+1)
             nrs2.append(abs(sum([n * next(p) for n in nrs])) % 10)
-            #nrs2.append(abs(sum(map(lambda x: x*next(p), nrs))) % 10)
         nrs = nrs2[:]
     return nrs
 
@@ -40,11 +38,13 @@ def task2(fn):
     data *= 10000
     skip = int(''.join([str(c) for c in data[:7]]))
     data = data[skip:]
-    print(len(data))
+    for _ in range(100):
+        for i in range(len(data)-1, 0, -1):
+            data[i-1] = (data[i-1]+data[i]) % 10
 
-    res = fft(data, 100)[:8]
+    res = data[:8]
     return ''.join([str(c) for c in res])
 
 
-#print(task1('input.txt'))
+print(task1('input.txt'))
 print(task2('input.txt'))
