@@ -1,4 +1,4 @@
-with open('test_input.txt') as fh:
+with open('input.txt') as fh:
     lines = fh.read().splitlines()
 
 area = dict()
@@ -63,28 +63,64 @@ def shortest_path(x, y, tx, ty, area, doors):
                 heapq.heappush(pq, (d+1+dist((x, y), (xi, yi)), xi, yi, d+1))
 
 
-def find_shortest_path(x, y, area, doors, keys, path):
-    print(f'{"->".join(path)}', end='\r')
+# def find_shortest_path(x, y, area, doors, keys, path):
+#     print(f'{"->".join(path)}', end='\r')
+#     doors = doors.copy()
+#     keys = keys.copy()
+# 
+#     if not keys:
+#         return 0
+# 
+#     minl = None
+#     reachable = reachable_keys(x, y, area, doors, keys)
+#     for key, kx, ky in reachable:
+#         l = shortest_path(x, y, kx, ky, area, doors)
+#         doors2 = dict(filter(lambda x: x[1] != key, doors.items()))
+#         keys2 = dict(filter(lambda x: x[1] != key, keys.items()))
+#         x2, y2 = kx, ky
+#         l += find_shortest_path(x2, y2, area, doors2, keys2, path + [key])
+#         minl = l if minl is None else min(minl, l)
+# 
+#     return minl
+# 
+# 
+# find_shortest_path(x, y, area, doors, keys, [])
+
+def xx(x, y, area, doors, keys):
     doors = doors.copy()
     keys = keys.copy()
 
-    if not keys:
-        return 0
+    pq = []
+    heapq.heappush(pq, (0, x, y, doors.items(), keys.items()))
+    kh = ''.join(sorted(list(keys.values())))
+    visited = {(x, y, kh)}
+    mind = None
+    while pq:
+        d, x, y, doors, keys = heapq.heappop(pq)
+        doors = dict(doors)
+        keys = dict(keys)
 
-    minl = None
-    reachable = reachable_keys(x, y, area, doors, keys)
-    for key, kx, ky in reachable:
-        l = shortest_path(x, y, kx, ky, area, doors)
-        doors2 = dict(filter(lambda x: x[1] != key, doors.items()))
-        keys2 = dict(filter(lambda x: x[1] != key, keys.items()))
-        x2, y2 = kx, ky
-        l += find_shortest_path(x2, y2, area, doors2, keys2, path + [key])
-        minl = l if minl is None else min(minl, l)
+        print(f'{d} -> {len(keys)} {len(pq)} *', end='\r')
+        if len(keys) == 0:
+            return d
+            mind = d if mind is None else min(mind, d)
+            print(mind)
+            continue
 
-    return minl
+        for key, kx, ky in reachable_keys(x, y, area, doors, keys):
+            l = shortest_path(x, y, kx, ky, area, doors)
+            doors2 = dict(filter(lambda x: x[1] != key, doors.items()))
+            keys2 = dict(filter(lambda x: x[1] != key, keys.items()))
+            x2, y2 = kx, ky
 
+            kh = ''.join(sorted(list(keys2.values())))
+            if (x2, y2, kh) not in visited:
+                visited.add((x2, y2, kh))
+                heapq.heappush(pq, (d+l, x2, y2, doors2.items(), keys2.items()))
 
-find_shortest_path(x, y, area, doors, keys, [])
+    return mind
+
+print(xx(x, y, area, doors, keys))
 
 # --- Day 18: Many-Worlds Interpretation ---
 # 
