@@ -1,24 +1,31 @@
-with open('input.txt') as fh:
-    lines = fh.read().splitlines()
+import heapq
+from math import dist
 
-area = dict()
-keys, doors = dict(), dict()
-x, y = None, None
-for yi, line in enumerate(lines):
-    for xi, char in enumerate(line):
-        if char in '#.':
-            area[xi, yi] = char
-        elif char == '@':
-            x, y = xi, yi
-            area[xi, yi] = '.'
-        elif char in 'abcdefghijklmnopqrstuvwxyz':
-            area[xi, yi] = '.'
-            keys[xi, yi] = char
-        elif char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-            area[xi, yi] = '.'
-            doors[xi, yi] = char.lower()
-        else:
-            raise ValueError(char)
+
+def read_input(fn):
+
+    with open(fn) as fh:
+        lines = fh.read().splitlines()
+
+    area = dict()
+    keys, doors = dict(), dict()
+    x, y = None, None
+    for yi, line in enumerate(lines):
+        for xi, char in enumerate(line):
+            if char in '#.':
+                area[xi, yi] = char
+            elif char == '@':
+                x, y = xi, yi
+                area[xi, yi] = '.'
+            elif char in 'abcdefghijklmnopqrstuvwxyz':
+                area[xi, yi] = '.'
+                keys[xi, yi] = char
+            elif char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                area[xi, yi] = '.'
+                doors[xi, yi] = char.lower()
+            else:
+                raise ValueError(char)
+    return x, y, area, doors, keys
 
 
 def reachable_keys(x, y, area, doors, keys):
@@ -31,6 +38,8 @@ def reachable_keys(x, y, area, doors, keys):
         x, y = queue.pop(0)
         if (x, y) in keys:
             reachable.append((keys.pop((x, y)), x, y))
+            # treat the key as a wall
+            continue
         for xi, yi in (x+1, y), (x-1, y), (x, y+1), (x, y-1):
             if (
                 (xi, yi) not in visited and
@@ -41,11 +50,12 @@ def reachable_keys(x, y, area, doors, keys):
                 queue.append((xi, yi))
     return reachable
 
+from functools import cache
 
-import heapq
-from math import dist
-
+@cache
 def shortest_path(x, y, tx, ty, area, doors):
+    area = dict(area)
+    doors = dict(doors)
     pq = []
     heapq.heappush(pq, (0, x, y, 0))
     visited = {x, y}
@@ -63,64 +73,62 @@ def shortest_path(x, y, tx, ty, area, doors):
                 heapq.heappush(pq, (d+1+dist((x, y), (xi, yi)), xi, yi, d+1))
 
 
-# def find_shortest_path(x, y, area, doors, keys, path):
-#     print(f'{"->".join(path)}', end='\r')
-#     doors = doors.copy()
-#     keys = keys.copy()
-# 
-#     if not keys:
-#         return 0
-# 
-#     minl = None
-#     reachable = reachable_keys(x, y, area, doors, keys)
-#     for key, kx, ky in reachable:
-#         l = shortest_path(x, y, kx, ky, area, doors)
-#         doors2 = dict(filter(lambda x: x[1] != key, doors.items()))
-#         keys2 = dict(filter(lambda x: x[1] != key, keys.items()))
-#         x2, y2 = kx, ky
-#         l += find_shortest_path(x2, y2, area, doors2, keys2, path + [key])
-#         minl = l if minl is None else min(minl, l)
-# 
-#     return minl
-# 
-# 
-# find_shortest_path(x, y, area, doors, keys, [])
+def h(x, y, points):
+    points = points + [(x, y)]
+    xs, ys = zip(*points)
+    return dist((min(xs), min(ys)), (max(xs), max(ys)))
 
-def xx(x, y, area, doors, keys):
-    doors = doors.copy()
-    keys = keys.copy()
+
+def xx(fn):
+    x, y, area, doors, keys = read_input(fn)
 
     pq = []
-    heapq.heappush(pq, (0, x, y, doors.items(), keys.items()))
+    heapq.heappush(pq, (0, 0, x, y, doors.items(), keys.items(), []))
     kh = ''.join(sorted(list(keys.values())))
-    visited = {(x, y, kh)}
-    mind = None
+    visited = {(x, y, 0, kh)}
     while pq:
-        d, x, y, doors, keys = heapq.heappop(pq)
+        _, d, x, y, doors, keys, path = heapq.heappop(pq)
         doors = dict(doors)
         keys = dict(keys)
 
-        print(f'{d} -> {len(keys)} {len(pq)} *', end='\r')
+        print(f'{int(_):>5} -> {"->".join(path):<50} {len(pq):>5}', end='\r')
         if len(keys) == 0:
+            print()
+            print("->".join(path))
+            print(d)
             return d
-            mind = d if mind is None else min(mind, d)
-            print(mind)
-            continue
 
         for key, kx, ky in reachable_keys(x, y, area, doors, keys):
-            l = shortest_path(x, y, kx, ky, area, doors)
+            l = shortest_path(x, y, kx, ky, tuple(area.items()), tuple(doors.items()))
             doors2 = dict(filter(lambda x: x[1] != key, doors.items()))
             keys2 = dict(filter(lambda x: x[1] != key, keys.items()))
             x2, y2 = kx, ky
 
             kh = ''.join(sorted(list(keys2.values())))
-            if (x2, y2, kh) not in visited:
-                visited.add((x2, y2, kh))
-                heapq.heappush(pq, (d+l, x2, y2, doors2.items(), keys2.items()))
+            if (x2, y2, d+l, kh) not in visited:
+                #longest = [shortest_path(x2, y2, kx, ky, tuple(area.items()), tuple()) for kx, ky in keys2]
+                #longest = max(longest + [0])
 
-    return mind
+                #visited.add((x2, y2, d+l, kh))
+                #heapq.heappush(pq, (d+l+longest, d+l, x2, y2, doors2.items(), keys2.items(), path + [key]))
 
-print(xx(x, y, area, doors, keys))
+                dist = h(x2, y2, list(keys2.keys()))
+                visited.add((x2, y2, d+l, kh))
+                heapq.heappush(pq, (d+l+dist, d+l, x2, y2, doors2.items(), keys2.items(), path + [key]))
+
+
+            #longest = [shortest_path(x2, y2, kx, ky, tuple(area.items()), tuple()) for kx, ky in keys2]
+            #longest = max(longest + [0])
+
+            #heapq.heappush(pq, (d+l+longest+len(keys2)-1, d+l, x2, y2, doors2.items(), keys2.items(), path + [key]))
+
+
+#print(xx('test_input.txt'))
+assert xx('test_input0.txt') == 132
+assert xx('test_input1.txt') == 136
+assert xx('test_input2.txt') == 81
+print(xx('input.txt'))
+
 
 # --- Day 18: Many-Worlds Interpretation ---
 # 
