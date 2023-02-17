@@ -63,6 +63,7 @@ def h(x, y, points):
 
 
 def task1(fn):
+    reachable_keys.cache_clear()
     x, y, area, doors, keys = read_input(fn)
 
     pq = []
@@ -74,10 +75,8 @@ def task1(fn):
         doors = dict(doors)
         keys = dict(keys)
 
-        print(f'{int(_):>5} -> {" ".join(path):<50} {len(pq):>5}', end='\r')
+        #print(f'{int(_):>5} -> {" ".join(path):<50} {len(pq):>5}', end='\r')
         if len(keys) == 0:
-            print()
-            print(d)
             return d
 
         for key, (kx, ky, l) in reachable_keys(x, y, tuple(area.items()), tuple(doors.items()), tuple(keys.items())).items():
@@ -92,7 +91,51 @@ def task1(fn):
                 heapq.heappush(pq, (d+l+dist, d+l, x2, y2, doors2.items(), keys2.items(), path + [key]))
 
 
+def task2(fn):
+    reachable_keys.cache_clear()
+
+    x, y, area, doors, keys = read_input(fn)
+    area[x, y] = '#'
+    area[x+1, y] = '#'
+    area[x-1, y] = '#'
+    area[x, y+1] = '#'
+    area[x, y-1] = '#'
+    pos = [[x-1, y-1], [x+1, y-1], [x-1, y+1], [x+1, y+1]]
+
+    pq = []
+    heapq.heappush(pq, (0, pos, doors.items(), keys.items()))
+    kh = ''.join(sorted(list(keys.values())))
+    visited = set()
+    while pq:
+        d, pos, doors, keys = heapq.heappop(pq)
+        doors = dict(doors)
+        keys = dict(keys)
+
+        #print(f'{int(d):>5} -> {" ".join(keys.values()):<50} {len(pq):>5}', end='\r')
+        if len(keys) == 0:
+            return d
+
+        for i, (x, y) in enumerate(pos):
+
+            for key, (kx, ky, l) in reachable_keys(x, y, tuple(area.items()), tuple(doors.items()), tuple(keys.items())).items():
+                doors2 = dict(filter(lambda x: x[1] != key, doors.items()))
+                keys2 = dict(filter(lambda x: x[1] != key, keys.items()))
+                x2, y2 = kx, ky
+
+                pos2 = list(pos[:])
+                pos2[i] = [x2, y2]
+                pos2 = tuple((xi, yi) for xi, yi in pos2)
+
+                kh = ''.join(sorted(list(keys2.values())))
+                if (pos2, d+l, kh) not in visited:
+                    visited.add((pos2, d+l, kh))
+                    heapq.heappush(pq, (d+l, pos2, doors2.items(), keys2.items()))
+
+
 assert task1('test_input0.txt') == 132
 assert task1('test_input1.txt') == 136
 assert task1('test_input2.txt') == 81
 print(task1('input.txt'))
+
+assert task2('test_input3.txt') == 72
+print(task2('input.txt'))
