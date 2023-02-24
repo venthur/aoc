@@ -1,20 +1,29 @@
+from collections import defaultdict
+
+
 def task1(numbers, rounds):
-    numbers = list(numbers)
+
+    counter = defaultdict(int)
+    last = dict()
+    for i, n in enumerate(numbers):
+        counter[n] += 1
+        if i < len(numbers)-1:
+            last[n] = i
+    lastn = n
+
     for i in range(len(numbers), rounds):
-        if i % 1000 == 0:
-            print(f'{rounds-i:>10}', end='\r')
-        n = numbers[:i].count(numbers[i-1])
+        n = counter[lastn]
         if n == 1:
-            numbers.append(0)
+            last[lastn] = i-1
+            lastn = 0
+            counter[lastn] += 1
         else:
-            for j, m in enumerate(reversed(numbers)):
-                if j == 0:
-                    continue
-                if m == numbers[i-1]:
-                    numbers.append(j)
-                    break
-    print()
-    return numbers[-1]
+            j = i - last[lastn] - 1
+            last[lastn] = i-1
+            lastn = j
+            counter[lastn] += 1
+
+    return lastn
 
 
 assert task1((0, 3, 6), 2020) == 436
