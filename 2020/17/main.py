@@ -11,9 +11,9 @@ def task1(fn):
             space[x, y, 0] = '#'
 
     for cycle in range(6):
-        space_old = space.copy()
-        active_coords = [pos for pos, v in space_old.items() if v == '#']
+        active_coords = [pos for pos, v in space.items() if v == '#']
         xs, ys, zs = zip(*active_coords)
+        space_old = space.copy()
         for x in range(min(xs)-1, max(xs)+2):
             for y in range(min(ys)-1, max(ys)+2):
                 for z in range(min(zs)-1, max(zs)+2):
@@ -31,6 +31,7 @@ def task1(fn):
                         space[x, y, z] = '.'
                     elif space_old[x, y, z] == '.' and active_n == 3:
                         space[x, y, z] = '#'
+
         print(cycle, sum((1 if v == '#' else 0 for v in space.values())))
 
     return sum((1 if v == '#' else 0 for v in space.values()))
