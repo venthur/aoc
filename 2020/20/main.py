@@ -89,13 +89,14 @@ def task1(fn):
     pt1 = img[0][0] * img[l-1][0] * img[-l][0] * img[-1][0]
 
     # pt2
+    # render image, cut borders
     img2 = [[None for i in range(l*8)] for j in range(l*8)]
     for idx, (tileid, r) in enumerate(img):
         # x, y offsets
         x = 8 * (idx % l)
         y = 8 * (idx // l)
 
-        tile = tiles[tileid][i]
+        tile = tiles[tileid][r]
         for yi, row in enumerate(tile):
             for xi, v in enumerate(row):
                 # cut off the borders
@@ -103,16 +104,36 @@ def task1(fn):
                     continue
                 img2[y + yi - 1][x + xi - 1] = v
 
+    monster = [
+        "                  # ",
+        "#    ##    ##    ###",
+        " #  #  #  #  #  #   ",
+    ]
+    mpoints = []
+    mw = len(monster[0])
+    mh = len(monster)
+    for y, row in enumerate(monster):
+        for x, c in enumerate(row):
+            if c == '#':
+                mpoints.append((x, y))
+
+    # generate all rotations and flips
     candidates = rotate_and_flip(img2)
+    points = set()
     for c in candidates:
-        s = ''
-        print()
-        for row in c:
-            print(''.join(row))
-            s += ''.join(row)
-        print(s)
-    pt2 = None
+        c = [''.join(row) for row in c]
+        for y in range(len(c) - mh):
+            for x in range(len(c[0]) - mw):
+                for xi, yi in mpoints:
+                    if c[y+yi][x+xi] != '#':
+                        break
+                else:
+                    for xi, yi in mpoints:
+                        points.add((y+yi, x+xi))
+
+    pt2 = sum(row.count('#') for row in candidates[0]) - len(points)
     return (pt1, pt2)
+
 
 assert task1('test_input0.txt') == (20899048083289, 273)
 print(task1('input.txt'))
