@@ -52,46 +52,28 @@ def task2(fn):
     rules["8"] = "42 | 42 8"
     rules["11"] = "42 31 | 42 11 31"
 
-    max_l = max(len(m) for m in messages.splitlines())
+    def match(string, ptr, rule):
 
-    allowed = set()
-    todo = [rules['0']]
-    seen = {rules['0']}
-    while todo:
-        pattern = todo.pop(0)
-        if pattern.replace(' ', '').isalpha():
-            pattern = pattern.replace(' ', '')
-            allowed.add(pattern)
-            print(f'{len(todo)} {len(allowed)}')
-        else:
-            pattern = pattern.split()
-            for i, token in enumerate(pattern):
-                if token.isalpha():
-                    continue
-                new_rule = rules[token]
-                for r in new_rule.split('|'):
-                    r = r.strip()
-                    pattern2 = pattern[:]
-                    pattern2[i] = r
-                    pattern2 = ' '.join(pattern2)
-                    #if pattern2 not in seen and len(pattern2.replace(' ', '')) <= max_l:
-                    if len(pattern2.replace(' ', '')) <= max_l:
-                        #seen.add(pattern2)
-                        todo.append(pattern2)
-                break
+        if rule.isalpha():
+            if ptr < len(string) and string[ptr] == rule:
+                yield ptr+1
+            return
+        for alt in rule.split(' | '):
+            tokens = alt.split(' ', 1)
+            if len(tokens) == 1:
+                yield from match(string, ptr, rules[tokens[0]])
+            else:
+                for m in match(string, ptr, rules[tokens[0]]):
+                    yield from match(string, m, tokens[1])
 
-    messages = messages.splitlines()
-
-    count = 0
-    for m in messages:
-        if m in allowed:
-            count += 1
-
-    return count
+    counter = sum(
+        1 if any(m == len(line) for m in match(line, 0, '0')) else 0
+        for line in messages.splitlines()
+    )
+    return counter
 
 
-
-#assert task1('test_input0.txt') == 2
-#print(task1('input.txt'))
+assert task1('test_input0.txt') == 2
+print(task1('input.txt'))
 
 print(task2('input.txt'))
