@@ -22,12 +22,38 @@ def task2(fn):
     with open(fn) as fh:
         lines = fh.read().splitlines()
 
-    l = len(lines[0])
-    n = ''.join(lines)
-    print(n)
+    cols = len(lines[0])
 
-    for i in range(l):
-        n[i::l]
+    lines_o = lines[:]
+    for i in range(cols):
+        col = list(zip(*lines_o))[i]
+        v = '1' if col.count('1') >= col.count('0') else '0'
+        lines_bak = lines_o[:]
+        for line in lines_bak:
+            if line[i] != v:
+                lines_o.remove(line)
+            if len(lines_o) == 1:
+                break
+        if len(lines_o) == 1:
+            break
+    ox = lines_o[0]
+
+    lines_c = lines[:]
+    for i in range(cols):
+        col = list(zip(*lines_c))[i]
+        v = '0' if col.count('0') <= col.count('1') else '1'
+        lines_bak = lines_c[:]
+        for line in lines_bak:
+            if line[i] != v:
+                lines_c.remove(line)
+            if len(lines_c) == 1:
+                break
+        if len(lines_c) == 1:
+            break
+    co = lines_c[0]
+
+    ox = int(ox, 2)
+    co = int(co, 2)
 
     return ox * co
 
