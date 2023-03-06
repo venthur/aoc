@@ -23,8 +23,8 @@ def task1(fn):
         for xi, yi in (x+1, y), (x-1, y), (x, y+1), (x, y-1):
             if (xi, yi) in risklevel and (xi, yi) not in visited:
                 visited.add((xi, yi))
-                r = risklevel[xi, yi]
-                heappush(todo, (cost+r+dist((xi, yi), goal), xi, yi, cost+r))
+                cost2 = cost + risklevel[xi, yi]
+                heappush(todo, (cost2+dist((xi, yi), goal), xi, yi, cost2))
 
 
 assert task1('test_input0.txt') == 40
