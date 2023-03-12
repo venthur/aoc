@@ -1,15 +1,13 @@
-from itertools import permutations, pairwise
 import re
 
 
-def task1(fn):
+def parse_input(fn):
     with open(fn) as fh:
         lines = fh.read().splitlines()
 
     flow = dict()
     conn = dict()
     for line in lines:
-        print(line)
         name, rate, connects = re.match(
             r'^.*?([A-Z]{2,2}).*?(\d+).*?((?:[A-Z]{2,2}, )+[A-Z]{2,2}|[A-Z]{2,2})$',
             line
@@ -19,25 +17,27 @@ def task1(fn):
         flow[name] = rate
         conn[name] = connects
 
+    return flow, conn
+
+
+def task1(fn):
+    flow, conn = parse_input(fn)
+
     pressurized = set()
     # get the set of valves you'd want to open
     for n, r in flow.items():
         if r > 0:
             pressurized.add(n)
-    print(pressurized)
 
     # get the shortest distances between them
     dist = dict()
     for a in flow.keys():
         stack = [(a, 0)]
         visited = set()
-        while True:
-            try:
-                b, i = stack.pop(0)
-                visited.add(b)
-                i += 1
-            except IndexError:
-                break
+        while stack:
+            b, i = stack.pop(0)
+            visited.add(b)
+            i += 1
             for c in conn[b]:
                 if (a, c) in dist:
                     d = dist[a, c]
@@ -49,75 +49,56 @@ def task1(fn):
                     dist[c, a] = i
                 if c not in visited:
                     stack.append((c, i))
-    print(dist)
 
-    best_pressure = 0
-    # i suspect we don't need to go through all 15! permutations as we need
-    # some valves in between as well
-    for i, p in enumerate(permutations(pressurized, min(len(pressurized), 8))):
-        s_left = 30
-        pressure = 0
+    best = 0
+    todo = [['AA', set(), 30, 0]]
+    while todo:
+        todo.sort(key=lambda x: x[-1])
+        pos, visited, seconds_left, pressure = todo.pop()
 
-        d = dist['AA', p[0]]
-        s_left -= d + 1
-        pressure += flow[p[0]] * s_left
+        if seconds_left <= 0 or visited == pressurized:
+            best = max(best, pressure)
+            continue
 
-        jumps = 1
-        for a, b in pairwise(p):
-            jumps += 1
-            d = dist[a, b]
-            if d + 1 <= s_left:
-                s_left -= d + 1
+        for next in pressurized - visited:
+            sl = seconds_left - dist[pos, next] - 1
+            sl = 0 if sl < 0 else sl
+            visited2 = visited.copy()
+            visited2.add(next)
+            pressure2 = pressure + sl * flow[next]
+            for i, t in enumerate(todo):
+                if visited2 <= t[1] and sl <= t[-2] and pressure2 <= t[-1]:
+                    break
+                elif visited2 >= t[1] and sl >= t[-2] and pressure2 >= t[-1]:
+                    t[0] = next
+                    t[1] = visited2
+                    t[2] = sl
+                    t[3] = pressure2
+                    break
             else:
-                break
-            if s_left >= 1:
-                pressure += flow[b] * s_left
-            else:
-                break
-        print(f'Permutation: {i} {p} ({best_pressure=} {jumps=})')
+                todo.append([next, visited2, sl, pressure2])
 
-        if pressure > best_pressure:
-            best_pressure = pressure
-
-    return best_pressure
+    return best
 
 
 def task2(fn):
-    with open(fn) as fh:
-        lines = fh.read().splitlines()
-
-    flow = dict()
-    conn = dict()
-    for line in lines:
-        print(line)
-        name, rate, connects = re.match(
-            r'^.*?([A-Z]{2,2}).*?(\d+).*?((?:[A-Z]{2,2}, )+[A-Z]{2,2}|[A-Z]{2,2})$',
-            line
-        ).groups()
-        rate = int(rate)
-        connects = [c.strip() for c in connects.split(',')]
-        flow[name] = rate
-        conn[name] = connects
+    flow, conn = parse_input(fn)
 
     pressurized = set()
     # get the set of valves you'd want to open
     for n, r in flow.items():
         if r > 0:
             pressurized.add(n)
-    print(pressurized)
 
     # get the shortest distances between them
     dist = dict()
     for a in flow.keys():
         stack = [(a, 0)]
         visited = set()
-        while True:
-            try:
-                b, i = stack.pop(0)
-                visited.add(b)
-                i += 1
-            except IndexError:
-                break
+        while stack:
+            b, i = stack.pop(0)
+            visited.add(b)
+            i += 1
             for c in conn[b]:
                 if (a, c) in dist:
                     d = dist[a, c]
@@ -129,67 +110,59 @@ def task2(fn):
                     dist[c, a] = i
                 if c not in visited:
                     stack.append((c, i))
-    print(dist)
 
-    best_pressure = 0
-    # i suspect we don't need to go through all 15! permutations as we need
-    # some valves in between as well
-    for p in permutations(pressurized, len(pressurized) // 2):
+    best = 0
+    todo = [[['AA', 'AA'], [0, 0], set(), 26, 0]]
+    while todo:
+        todo.sort(key=lambda x: x[-1])
+        pos, ttl, visited, seconds_left, pressure = todo.pop()
 
-        s_left = 26
-        pressure = 0
+        if seconds_left <= 0 or visited == pressurized:
+            #print(best, len(todo))
+            best = max(best, pressure)
+            continue
 
-        d = dist['AA', p[0]]
-        s_left -= d + 1
-        pressure += flow[p[0]] * s_left
+        # which one is closer to next action
+        dt = min(ttl)
+        ttl[0] -= dt
+        ttl[1] -= dt
+        seconds_left -= dt
 
-        jumps = 1
-        for a, b in pairwise(p):
-            jumps += 1
-            d = dist[a, b]
-            if d + 1 <= s_left:
-                s_left -= d + 1
-            else:
-                break
-            if s_left >= 1:
-                pressure += flow[b] * s_left
-            else:
-                break
+        i = 0 if ttl[0] == 0 else 1
+        for next in pressurized - visited:
+            pos2 = pos[:]
+            pos2[i] = next
+            ttl2 = ttl[:]
+            ttl2[i] = dist[pos[i], next] + 1
+            visited2 = visited.copy()
+            visited2.add(next)
+            pressure2 = pressure + (seconds_left - ttl2[i]) * flow[next]
 
-        rest = pressurized - set(p)
-        for p2 in permutations(rest):
+            #sl = seconds_left - dist[pos, next] - 1
+            #sl = 0 if sl < 0 else sl
+            #visited2 = visited.copy()
+            #visited2.add(next)
+            #pressure2 = pressure + sl * flow[next]
 
-            s_left = 26
-            pressure2 = 0
-
-            d = dist['AA', p2[0]]
-            s_left -= d + 1
-            pressure2 += flow[p2[0]] * s_left
-
-            jumps = 1
-            for a, b in pairwise(p2):
-                jumps += 1
-                d = dist[a, b]
-                if d + 1 <= s_left:
-                    s_left -= d + 1
-                else:
+            for t in todo:
+                if visited2 <= t[2] and seconds_left <= t[-2] and pressure2 <= t[-1]:
                     break
-                if s_left >= 1:
-                    pressure2 += flow[b] * s_left
-                else:
-                    break
-            print(f'Permutation: {p} {p2} ({best_pressure=})')
+                #elif visited2 >= t[2] and seconds_left >= t[-2] and pressure2 >= t[-1]:
+                #    t[0] = pos2
+                #    t[1] = ttl2
+                #    t[2] = visited2
+                #    t[3] = seconds_left
+                #    t[4] = pressure2
+                #    break
+            else:
+                todo.append([pos2, ttl2, visited2, seconds_left, pressure2])
+            #todo.append([pos2, ttl2, visited2, seconds_left, pressure2])
 
-            if pressure + pressure2 > best_pressure:
-                best_pressure = pressure + pressure2
-
-    print(best_pressure)
-    return best_pressure
+    return best
 
 
 #assert task1('test_input.txt') == 1651
 #print(task1('input.txt'))
-
 
 assert task2('test_input.txt') == 1707
 print(task2('input.txt'))
