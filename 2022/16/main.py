@@ -1,3 +1,4 @@
+from itertools import combinations
 import re
 
 
@@ -111,58 +112,38 @@ def task2(fn):
                 if c not in visited:
                     stack.append((c, i))
 
-    best = 0
-    todo = [[['AA', 'AA'], [0, 0], set(), 26, 0]]
+    best = dict()
+    todo = [['AA', set(), 26, 0]]
     while todo:
         todo.sort(key=lambda x: x[-1])
-        pos, ttl, visited, seconds_left, pressure = todo.pop()
+        pos, visited, seconds_left, pressure = todo.pop()
 
         if seconds_left <= 0 or visited == pressurized:
-            #print(best, len(todo))
-            best = max(best, pressure)
+            visited = tuple(sorted(list(visited)))
+            if visited in best and best[visited] < pressure:
+                best[visited] = pressure
+            elif visited not in best:
+                best[visited] = pressure
+
             continue
 
-        # which one is closer to next action
-        dt = min(ttl)
-        ttl[0] -= dt
-        ttl[1] -= dt
-        seconds_left -= dt
-
-        i = 0 if ttl[0] == 0 else 1
         for next in pressurized - visited:
-            pos2 = pos[:]
-            pos2[i] = next
-            ttl2 = ttl[:]
-            ttl2[i] = dist[pos[i], next] + 1
+            sl = seconds_left - dist[pos, next] - 1
+            sl = 0 if sl < 0 else sl
             visited2 = visited.copy()
             visited2.add(next)
-            pressure2 = pressure + (seconds_left - ttl2[i]) * flow[next]
+            pressure2 = pressure + sl * flow[next]
+            todo.append([next, visited2, sl, pressure2])
 
-            #sl = seconds_left - dist[pos, next] - 1
-            #sl = 0 if sl < 0 else sl
-            #visited2 = visited.copy()
-            #visited2.add(next)
-            #pressure2 = pressure + sl * flow[next]
+    maxv = 0
+    for (a, av), (b, bv) in combinations(best.items(), 2):
+        if not set(a) & set(b):
+            maxv = max(av + bv, maxv)
 
-            for t in todo:
-                if visited2 <= t[2] and seconds_left <= t[-2] and pressure2 <= t[-1]:
-                    break
-                #elif visited2 >= t[2] and seconds_left >= t[-2] and pressure2 >= t[-1]:
-                #    t[0] = pos2
-                #    t[1] = ttl2
-                #    t[2] = visited2
-                #    t[3] = seconds_left
-                #    t[4] = pressure2
-                #    break
-            else:
-                todo.append([pos2, ttl2, visited2, seconds_left, pressure2])
-            #todo.append([pos2, ttl2, visited2, seconds_left, pressure2])
-
-    return best
+    return maxv
 
 
-#assert task1('test_input.txt') == 1651
-#print(task1('input.txt'))
+assert task1('test_input.txt') == 1651
+print(task1('input.txt'))
 
-assert task2('test_input.txt') == 1707
 print(task2('input.txt'))
