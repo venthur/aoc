@@ -63,13 +63,32 @@ def pp(tunnel, tile, x, y):
     print()
 
 
-def task1(fn):
+def task1(fn, rocks):
     pattern = read_input(fn)
     tiles = load_tiles()
 
     tunnel = dict()
     total_height = 0
-    for rock in range(2022):
+    rock = 0
+    primed = False
+    seen = dict()
+    add_total_height = 0
+    while rock < rocks:
+        if not primed and rock == len(tiles) * len(pattern):
+            primed = True
+        if primed:
+            f = tuple(pattern), tuple(tuple(i.items()) for i in list(tiles))
+            if f in seen:
+                rock_old, total_height_old = seen[f]
+                delta_rocks = rock - rock_old
+                delta_height = total_height - total_height_old
+                skip = (rocks - rock) // delta_rocks
+                rock += skip * delta_rocks
+                add_total_height = skip * delta_height
+                primed = False
+            else:
+                seen[f] = (rock, total_height)
+
         # get next tile
         tile = tiles[0]
         tiles.rotate(-1)
@@ -135,8 +154,13 @@ def task1(fn):
                 total_height = abs(min(y for (x, y), v in tunnel.items() if v == '#')) + 1
                 break
 
-    return total_height
+        rock += 1
+
+    return total_height + add_total_height
 
 
-assert task1('test_input.txt') == 3068
-print(task1('input.txt'))
+assert task1('test_input.txt', 2022) == 3068
+print(task1('input.txt', 2022))
+
+assert task1('test_input.txt', 1000000000000) == 1514285714288
+print(task1('input.txt', 1000000000000))
