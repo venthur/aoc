@@ -1,3 +1,6 @@
+from math import sqrt
+
+
 def parse_input(fn):
     with open(fn) as fh:
         maze_str, directions_str = fh.read().split('\n\n')
@@ -109,5 +112,15 @@ def task1(fn):
     return 1000 * y + 4 * x + d
 
 
+def task2(fn):
+    maze, directions = parse_input(fn)
+
+    LENGTH = int(sqrt(len(maze) / 6))
+    print(LENGTH)
+
+
 assert task1('test_input0.txt') == 6032
 print(task1('input.txt'))
+
+assert task2('test_input0.txt') == 5031
+print(task2('input.txt'))
