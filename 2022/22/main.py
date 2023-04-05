@@ -116,7 +116,49 @@ def task2(fn):
     maze, directions = parse_input(fn)
 
     LENGTH = int(sqrt(len(maze) / 6))
-    print(LENGTH)
+
+    # (face coord, out direction) -> (face coord, in direction)
+    face_trans = dict()
+
+    # pick a random face
+    x, y = list(maze)[0]
+    fx, fy = (x-1) // LENGTH, (y-1) // LENGTH
+    todo = [(fx, fy)]
+    visited = {(fx, fy)}
+    while todo:
+        fx, fy = todo.pop()
+        print(f'{(fx, fy)=}')
+
+        # connect to direct neighbours
+        for fxi, fyi, di in (
+            (fx+1, fy, 0),
+            (fx, fy+1, 1),
+            (fx-1, fy, 2),
+            (fx, fy-1, 3),
+        ):
+            # did we find a new face?
+            if (fxi*LENGTH+1, fyi*LENGTH+1) in maze and (fxi, fyi) not in visited:
+                visited.add((fxi, fyi))
+                todo.append((fxi, fyi))
+
+            if (fxi*LENGTH+1, fyi*LENGTH+1) in maze:
+                face_trans[fx, fy, di] = (fxi, fyi, di)
+                face_trans[fxi, fyi, (di+2) % 4] = (fx, fy, (di+2) % 4)
+
+        # direct neighbours via wrap-around
+        for fxi, fyi, di in (
+            (fx+3, fy, 0),
+            (fx, fy+3, 1),
+            (fx-3, fy, 2),
+            (fx, fy-3, 3),
+        ):
+            if (fxi*LENGTH+1, fyi*LENGTH+1) in maze:
+                face_trans[fx, fy, di] = (fxi, fyi, di)
+                face_trans[fxi, fyi, (di+2) % 4] = (fx, fy, (di+2) % 4)
+
+    print(len(face_trans))
+    print(face_trans.keys())
+
 
 
 assert task1('test_input0.txt') == 6032
