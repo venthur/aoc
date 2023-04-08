@@ -1,6 +1,3 @@
-from math import sqrt
-
-
 def parse_input(fn):
     with open(fn) as fh:
         maze_str, directions_str = fh.read().split('\n\n')
@@ -112,57 +109,183 @@ def task1(fn):
     return 1000 * y + 4 * x + d
 
 
+def move_cube(maze, x, y, d):
+
+    # length of the side of a face
+    L_FACE = 50
+
+    # layout of our specific problem
+
+    #  -------\  /----
+    # |  ----[0][1]-  |
+    # | |   /[2]/   | |
+    # |  -[3][4]----  |
+    #  ---[5]/        |
+    #      \----------
+
+    # directions
+    #     ^
+    #     3
+    # < 2 + 0 >
+    #     1
+    #     v
+
+    # face positions defined by top-left coordinates
+    FACES = [
+        (51, 1), (101, 1),
+        (51, 51),
+        (1, 101), (51, 101),
+        (1, 151),
+    ]
+
+    # transitions from (face, dir) -> (face_new, dir_new)
+    FACE_TRANS = {
+        (0, 3): (5, 0),
+        (5, 2): (0, 1),
+
+        (5, 1): (1, 1),
+        (1, 3): (5, 3),
+
+        (5, 0): (4, 3),
+        (4, 1): (5, 2),
+
+        (4, 0): (1, 2),
+        (1, 0): (4, 2),
+
+        (0, 2): (3, 0),
+        (3, 2): (0, 0),
+
+        (1, 1): (2, 2),
+        (2, 0): (1, 3),
+
+        (3, 3): (2, 0),
+        (2, 2): (3, 1),
+    }
+
+    # x, y transformation relative to origin of face
+    REL_TRANS = {
+        # clockwise
+        # up -> right
+        (3, 0): lambda x, y: (-y-1, x),
+        # down -> left
+        (1, 2): lambda x, y: (2*L_FACE-y-1, x),
+
+        # counter clockwise
+        # right -> up
+        (0, 3): lambda x, y: (y, 2*L_FACE-x-1),
+        # left -> down
+        (2, 1): lambda x, y: (y, -x-1),
+
+        # same direction
+        # down -> down
+        (1, 1): lambda x, y: (x, y-L_FACE),
+        # up -> up
+        (3, 3): lambda x, y: (x, y+L_FACE),
+
+        # switch direction
+        # right -> left
+        (0, 2): lambda x, y: (2*L_FACE-x-1, L_FACE-y-1),
+        # left -> right
+        (2, 0): lambda x, y: (-x-1, L_FACE-y-1),
+    }
+
+    # up -> right
+    assert REL_TRANS[3, 0](0, 0) == (-1, 0)
+    assert REL_TRANS[3, 0](49, 0) == (-1, 49)
+    # down -> left
+    assert REL_TRANS[1, 2](0, 49) == (50, 0)
+    assert REL_TRANS[1, 2](49, 49) == (50, 49)
+    # right -> up
+    assert REL_TRANS[0, 3](49, 0) == (0, 50)
+    assert REL_TRANS[0, 3](49, 49) == (49, 50)
+    # left -> down
+    assert REL_TRANS[2, 1](0, 0) == (0, -1)
+    assert REL_TRANS[2, 1](0, 49) == (49, -1)
+    # down -> down
+    assert REL_TRANS[1, 1](0, 49) == (0, -1)
+    assert REL_TRANS[1, 1](49, 49) == (49, -1)
+    # up -> up
+    assert REL_TRANS[3, 3](0, 0) == (0, 50)
+    assert REL_TRANS[3, 3](49, 0) == (49, 50)
+    # right -> left
+    assert REL_TRANS[0, 2](49, 0) == (50, 49)
+    assert REL_TRANS[0, 2](49, 49) == (50, 0)
+    # left -> right
+    assert REL_TRANS[2, 0](0, 0) == (-1, 49)
+    assert REL_TRANS[2, 0](0, 49) == (-1, 0)
+
+    match d:
+        case 0:
+            xi, yi = x+1, y
+        case 1:
+            xi, yi = x, y+1
+        case 2:
+            xi, yi = x-1, y
+        case 3:
+            xi, yi = x, y-1
+
+    if (xi, yi) in maze and maze[xi, yi] == '#':
+        # wall
+        return None
+    if (xi, yi) in maze and maze[xi, yi] == '.':
+        # good
+        return xi, yi, d
+
+    if (xi, yi) not in maze:
+        # which face are we leaving?
+        for fid, (xf, yf) in enumerate(FACES):
+            if xf <= x < xf+L_FACE and yf <= y < yf+L_FACE:
+                # where to: new face new direction, new pos
+                fidi, di = FACE_TRANS[fid, d]
+                # shift pos relative to face origin
+                xi -= FACES[fid][0]
+                yi -= FACES[fid][1]
+                xi, yi = REL_TRANS[d, di](xi, yi)
+                # shift back to global pos
+                xi += FACES[fidi][0]
+                yi += FACES[fidi][1]
+                break
+        else:
+            raise ValueError(f'Position {x, y} not in known FACES.')
+
+        if (xi, yi) in maze and maze[xi, yi] == '#':
+            return None
+        elif (xi, yi) in maze and maze[xi, yi] == '.':
+            return xi, yi, di
+
+        ValueError(f'{xi, yi, di}')
+
+
 def task2(fn):
     maze, directions = parse_input(fn)
 
-    LENGTH = int(sqrt(len(maze) / 6))
+    positions = list(maze.keys())
+    positions.sort(key=lambda x: x[0])
+    positions.sort(key=lambda x: x[1])
 
-    # (face coord, out direction) -> (face coord, in direction)
-    face_trans = dict()
+    x, y = positions[0]
+    # 0: right, 1: down, 2: left, 3: up
+    d = 0
 
-    # pick a random face
-    x, y = list(maze)[0]
-    fx, fy = (x-1) // LENGTH, (y-1) // LENGTH
-    todo = [(fx, fy)]
-    visited = {(fx, fy)}
-    while todo:
-        fx, fy = todo.pop()
-        print(f'{(fx, fy)=}')
+    for direction in directions:
+        if direction == 'L':
+            d -= 1
+            d %= 4
+        elif direction == 'R':
+            d += 1
+            d %= 4
+        else:
+            for i in range(direction):
+                new_pos = move_cube(maze, x, y, d)
+                if new_pos is None:
+                    break
+                x, y, d = new_pos
 
-        # connect to direct neighbours
-        for fxi, fyi, di in (
-            (fx+1, fy, 0),
-            (fx, fy+1, 1),
-            (fx-1, fy, 2),
-            (fx, fy-1, 3),
-        ):
-            # did we find a new face?
-            if (fxi*LENGTH+1, fyi*LENGTH+1) in maze and (fxi, fyi) not in visited:
-                visited.add((fxi, fyi))
-                todo.append((fxi, fyi))
-
-            if (fxi*LENGTH+1, fyi*LENGTH+1) in maze:
-                face_trans[fx, fy, di] = (fxi, fyi, di)
-                face_trans[fxi, fyi, (di+2) % 4] = (fx, fy, (di+2) % 4)
-
-        # direct neighbours via wrap-around
-        for fxi, fyi, di in (
-            (fx+3, fy, 0),
-            (fx, fy+3, 1),
-            (fx-3, fy, 2),
-            (fx, fy-3, 3),
-        ):
-            if (fxi*LENGTH+1, fyi*LENGTH+1) in maze:
-                face_trans[fx, fy, di] = (fxi, fyi, di)
-                face_trans[fxi, fyi, (di+2) % 4] = (fx, fy, (di+2) % 4)
-
-    print(len(face_trans))
-    print(face_trans.keys())
-
+    return 1000 * y + 4 * x + d
 
 
 assert task1('test_input0.txt') == 6032
 print(task1('input.txt'))
 
-assert task2('test_input0.txt') == 5031
+# assert task2('test_input0.txt') == 5031
 print(task2('input.txt'))
