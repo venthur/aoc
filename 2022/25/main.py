@@ -37,7 +37,6 @@ def task1(fn):
         snafu = fh.read().splitlines()
 
     numbers = [snafu_to_decimal(s) for s in snafu]
-    print(numbers)
     return decimal_to_snafu(sum(numbers))
 
 
