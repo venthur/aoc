@@ -1,4 +1,4 @@
-def get_reflection_value(maze, rows, cols):
+def get_reflection_value(maze, rows, cols, old_value=None):
     # check for horizontal reflection
     for row in range(rows-1):
         found_reflection = True
@@ -10,7 +10,9 @@ def get_reflection_value(maze, rows, cols):
             if not found_reflection:
                 break
         if found_reflection:
-            return 100 * (row + 1)
+            value = 100 * (row + 1)
+            if value != old_value:
+                return value
 
     # check for vertical reflection
     for col in range(cols-1):
@@ -23,7 +25,9 @@ def get_reflection_value(maze, rows, cols):
             if not found_reflection:
                 break
         if found_reflection:
-            return col + 1
+            value = col + 1
+            if value != old_value:
+                return value
 
 
 def task1(fn):
@@ -50,7 +54,6 @@ def task2(fn):
 
     result = 0
     for block in blocks:
-        print(block)
         maze = dict()
         for row, line in enumerate(block.splitlines()):
             for col, char in enumerate(line):
@@ -67,8 +70,8 @@ def task2(fn):
             else:
                 maze2[(y, x)] = '#'
 
-            value = get_reflection_value(maze2, rows, cols)
-            if value and value != old_value:
+            value = get_reflection_value(maze2, rows, cols, old_value)
+            if value:
                 result += value
                 break
         else:
