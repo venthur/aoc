@@ -1,41 +1,29 @@
 def get_reflection_value(maze, rows, cols):
     # check for horizontal reflection
     for row in range(rows-1):
-        # check for vertical reflection
-        for col in range(cols):
-            if maze[(row, col)] != maze[(row+1, col)]:
+        found_reflection = True
+        for i in range(min(row+1, rows-row-1)):
+            for col in range(cols):
+                if maze[(row-i, col)] != maze[(row+i+1, col)]:
+                    found_reflection = False
+                    break
+            if not found_reflection:
                 break
-        else:
-            # we found a candidate row
-            found_reflection = True
-            for i in range(min(row, rows-row-2)):
-                for col in range(cols):
-                    if maze[(row-i-1, col)] != maze[(row+i+2, col)]:
-                        found_reflection = False
-                        break
-                if not found_reflection:
-                    break
-            if found_reflection:
-                return 100 * (row + 1)
-    else:
-        # check for vertical reflection
-        for col in range(cols-1):
-            # check for horizontal reflection
+        if found_reflection:
+            return 100 * (row + 1)
+
+    # check for vertical reflection
+    for col in range(cols-1):
+        found_reflection = True
+        for i in range(min(col+1, cols-col-1)):
             for row in range(rows):
-                if maze[(row, col)] != maze[(row, col+1)]:
+                if maze[(row, col-i)] != maze[(row, col+i+1)]:
+                    found_reflection = False
                     break
-            else:
-                # we found a candidate column
-                found_reflection = True
-                for i in range(min(col, cols-col-2)):
-                    for row in range(rows):
-                        if maze[(row, col-i-1)] != maze[(row, col+i+2)]:
-                            found_reflection = False
-                            break
-                    if not found_reflection:
-                        break
-                if found_reflection:
-                    return col + 1
+            if not found_reflection:
+                break
+        if found_reflection:
+            return col + 1
 
 
 def task1(fn):
@@ -62,6 +50,7 @@ def task2(fn):
 
     result = 0
     for block in blocks:
+        print(block)
         maze = dict()
         for row, line in enumerate(block.splitlines()):
             for col, char in enumerate(line):
@@ -82,8 +71,8 @@ def task2(fn):
             if value and value != old_value:
                 result += value
                 break
-    else:
-        raise ValueError('No solution found')
+        else:
+            raise ValueError('No solution found')
 
     return result
 
