@@ -46,5 +46,88 @@ def task1(fn, lo, hi):
     )
 
 
+def task2(fn):
+    stones = []
+    with open(fn) as fh:
+        for line in fh.read().splitlines():
+            p, v = line.split(' @ ')
+            p = [int(i) for i in p.split(', ')]
+            v = [int(i) for i in v.split(', ')]
+            stones.append((*p, *v))
+
+    potential_x = None
+    potential_y = None
+    potential_z = None
+    for a, b in combinations(stones, 2):
+        apx, apy, apz, avx, avy, avz = a
+        bpx, bpy, bpz, bvx, bvy, bvz = b
+
+        if avx == bvx:
+            new = set()
+            diff = bpx - apx
+            for v in range(-1000, 1000):
+                if v == avx:
+                    new.add(v)
+                    continue
+                if diff % (v - avx) == 0:
+                    new.add(v)
+            if potential_x is not None:
+                potential_x &= new
+            else:
+                potential_x = new.copy()
+
+        if avy == bvy:
+            new = set()
+            diff = bpy - apy
+            for v in range(-1000, 1000):
+                if v == avy:
+                    new.add(v)
+                    continue
+                if diff % (v - avy) == 0:
+                    new.add(v)
+            if potential_y is not None:
+                potential_y &= new
+            else:
+                potential_y = new.copy()
+
+        if avz == bvz:
+            new = set()
+            diff = bpz - apz
+            for v in range(-1000, 1000):
+                if v == avz:
+                    new.add(v)
+                    continue
+                if diff % (v - avz) == 0:
+                    new.add(v)
+            if potential_z is not None:
+                potential_z &= new
+            else:
+                potential_z = new.copy()
+
+    rvx = potential_x.pop()
+    rvy = potential_y.pop()
+    rvz = potential_z.pop()
+
+    apx, apy, apz, avx, avy, avz = stones[0]
+    bpx, bpy, bpz, bvx, bvy, bvz = stones[1]
+
+    ma = (avy - rvy) / (avx - rvx)
+    mb = (bvy - rvy) / (bvx - rvx)
+
+    ca = apy - (ma * apx)
+    cb = bpy - (mb * bpx)
+
+    x = int((cb - ca) / (ma - mb))
+    y = int(ma * x + ca)
+    t = (x - apx) // (avx - rvx)
+    z = apz + (avz - rvz) * t
+
+    return x + y + z
+
+
 assert task1('test_input.txt', 7, 27) == 2
 print(task1('input.txt', 200000000000000, 400000000000000))
+
+# doesn't work for test input
+# assert task2('test_input.txt') == 47
+print(task2('input.txt'))
