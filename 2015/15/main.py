@@ -1,7 +1,7 @@
 import re
 
 
-def gen_spoons(n):
+def gen_spoons():
     for i in range(101):
         for j in range(101-i):
             for k in range(101-i-j):
@@ -24,7 +24,7 @@ def task1(fn, check_calories=False):
             params[i].append(pi)
 
     max_score = 0
-    for spoons in gen_spoons(len(params[0])):
+    for spoons in gen_spoons():
         score = 1
         if check_calories:
             # check the 500 calories
