@@ -25,9 +25,8 @@ def dijkstra(area, start):
         for i in range(4):
             distance[x, y, i] = INF
             previous[x, y, i] = None
-    # reindeer starts at start facing east
-    distance[start[0], start[1], 1] = 0
-    heappush(q, (0, start[0], start[1], 1))
+    distance[start] = 0
+    heappush(q, (0, *start))
 
     while q:
         dist, x, y, d = heappop(q)
@@ -55,13 +54,31 @@ def task1(fn):
     start = [k for k, v in area.items() if v == 'S'][0]
     end = [k for k, v in area.items() if v == 'E'][0]
 
-    distance, previous = dijkstra(area, start)
+    distance, previous = dijkstra(area, (*start, 1))
 
     return min(distance[*end, i] for i in range(4))
 
 
 def task2(fn):
-    pass
+    area = read_input(fn)
+
+    start = [k for k, v in area.items() if v == 'S'][0]
+    end = [k for k, v in area.items() if v == 'E'][0]
+
+    distance, previous = dijkstra(area, (*start, 1))
+
+    # final direction
+    d = sorted([(distance[*end, i], i) for i in range(4)])[0][-1]
+    d = (d+2) % 4
+    distance2, previous2 = dijkstra(area, (*end, d))
+
+    min_distance = min(distance[*end, i] for i in range(4))
+
+    tiles = set()
+    for x, y, d in distance.keys():
+        if distance[x, y, d] + distance2[x, y, (d+2) % 4] == min_distance:
+            tiles.add((x, y))
+    return len(tiles)
 
 
 assert task1('test_input1.txt') == 7036
