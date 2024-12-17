@@ -1,6 +1,4 @@
 from math import trunc
-from itertools import count
-from functools import cache
 
 
 def read_input(fn):
@@ -15,9 +13,7 @@ def read_input(fn):
     return registers, program
 
 
-@cache
 def compute(registers, program, ip, out):
-    # TODO check ip < len(program)
     instr = program[ip]
     operand = program[ip+1]
     combo = {
@@ -62,8 +58,6 @@ def compute(registers, program, ip, out):
         case 7:
             registers[2] = trunc(registers[0] / 2**combo)
             ip += 2
-        case _:
-            raise ValueError(f'Unknown instrunction {instr}')
 
     return registers, program, ip, out
 
@@ -79,16 +73,20 @@ def task1(fn):
 
 
 def task2(fn):
-    for i in count():
-        registers, program = read_input(fn)
-        registers[0] = i
-        out = []
-        ip = 0
-        while ip < len(program):
-            registers, program, ip, out = compute(registers, program, ip, out)
-            #print(f'{ip=}, {registers=}, {out=}')
-            if out == program:
-                return i
+    registers, program = read_input(fn)
+
+    todo = [(1, 0)]
+    for i, a in todo:
+        for a in range(a, a+8):
+            out = []
+            ip = 0
+            registers = [a, 0, 0]
+            while ip < len(program):
+                registers, program, ip, out = compute(registers, program, ip, out)
+            if out[-i:] == program[-i:]:
+                todo.append((i+1, a*8))
+                if i == len(program):
+                    return a
 
 
 assert task1('test_input.txt') == '4,6,3,5,6,3,5,2,1,0'
