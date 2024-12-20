@@ -1,5 +1,5 @@
 from heapq import heappush, heappop
-from copy import deepcopy
+from itertools import combinations
 
 
 INF = 10**10
@@ -50,7 +50,7 @@ def dijkstra(area, start):
     return dist, prev
 
 
-def task1(fn):
+def task1(fn, d, thresh):
     area, start, end = read_input(fn)
     dist, prev = dijkstra(area, start)
 
@@ -62,20 +62,16 @@ def task1(fn):
     path.append(start)
 
     count = 0
-    for x, y in path:
-        for x2, y2 in (x-2, y), (x+2, y), (x, y-2), (x, y+2):
-            d2 = dist.get((x2, y2), INF)
-            if d2 < INF and dist[x, y] - d2 > 2:
-                dd = dist[x, y] - d2 - 2
-                if dd >= 100:
-                    count += 1
-
+    for (x, y), (x2, y2) in combinations(path, 2):
+        if abs(x - x2) + abs(y - y2) <= d and dist[x, y] - dist[x2, y2] > d:
+            dd = dist[x, y] - dist[x2, y2] - (abs(x - x2) + abs(y - y2))
+            if dd >= thresh:
+                count += 1
     return count
 
 
-def task2(fn):
-    pass
+assert task1('test_input.txt', 2, 2) == sum([14, 14, 2, 4, 2, 3, 1, 1, 1, 1, 1])
+print(task1('input.txt', 2, 100))
 
-
-print(task1('test_input.txt'))
-print(task1('input.txt'))
+assert task1('test_input.txt', 20, 50) == sum([32, 31, 29, 39, 25, 23, 20, 19, 12, 14, 12, 22, 4, 3])
+print(task1('input.txt', 20, 100))
