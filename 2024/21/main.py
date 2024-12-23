@@ -1,5 +1,6 @@
 from collections import deque
 from itertools import product
+from functools import cache
 
 
 def read_input(fn):
@@ -10,21 +11,7 @@ def read_input(fn):
     return lines
 
 
-NUMPAD = [
-    ["7", "8", "9"],
-    ["4", "5", "6"],
-    ["1", "2", "3"],
-    [None, "0", "A"],
-]
-
-
-DIRPAD = [
-    [None, "^", "A"],
-    ["<", "v", ">"],
-]
-
-
-def solve(string, keypad):
+def compute_seqs(keypad):
     pos = {}
     for r in range(len(keypad)):
         for c in range(len(keypad[r])):
@@ -57,25 +44,52 @@ def solve(string, keypad):
                     continue
                 break
             seqs[(x, y)] = possibilities
+    return seqs
+
+
+def solve(string, seqs):
     options = [seqs[(x, y)] for x, y in zip("A" + string, string)]
     return ["".join(x) for x in product(*options)]
 
 
-def task1(fn):
+@cache
+def compute_length(seq, depth=2):
+    if depth == 1:
+        return sum(DIR_LENGTHS[(x, y)] for x, y in zip("A" + seq, seq))
+    length = 0
+    for x, y in zip("A" + seq, seq):
+        length += min(compute_length(subseq, depth - 1) for subseq in DIR_SEQS[(x, y)])
+    return length
+
+
+NUMPAD = [
+    ["7", "8", "9"],
+    ["4", "5", "6"],
+    ["1", "2", "3"],
+    [None, "0", "A"],
+]
+NUM_SEQS = compute_seqs(NUMPAD)
+
+
+DIRPAD = [
+    [None, "^", "A"],
+    ["<", "v", ">"],
+]
+DIR_SEQS = compute_seqs(DIRPAD)
+DIR_LENGTHS = {key: len(value[0]) for key, value in DIR_SEQS.items()}
+
+
+def task1(fn, depth=2):
     data = read_input(fn)
     total = 0
     for line in data:
-        robot1 = solve(line, NUMPAD)
-        next = robot1
-        for _ in range(2):
-            possible_next = []
-            for seq in next:
-                possible_next += solve(seq, DIRPAD)
-            minlen = min(map(len, possible_next))
-            next = [seq for seq in possible_next if len(seq) == minlen]
-        total += len(next[0]) * int(line[:-1])
+        inputs = solve(line, NUM_SEQS)
+        length = min([compute_length(i, depth) for i in inputs])
+        total += length * int(line[:-1])
     return total
 
 
 assert task1('test_input.txt') == 126384
 print(task1('input.txt'))
+
+print(task1('input.txt', 25))
