@@ -13,3 +13,4 @@ My solutions for the [Advent of Code](https://adventofcode.com/) challenge.
 | 2021 | 50 |
 | 2022 | 50 |
 | 2023 | 50 |
+| 2024 | 50 |
