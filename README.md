@@ -1,6 +1,7 @@
 ## Advent of Code
 
-My solutions for the [Advent of Code](https://adventofcode.com/) challenge.
+My solutions for the [Advent of Code](https://adventofcode.com/) challenge. All
+solutions are in Python, no external dependencies.
 
 | Year | Stars |
 | --- | --- |
