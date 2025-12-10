@@ -49,6 +49,9 @@ def task1(fn):
 
     return result
 
+INF = 2**32
+current_best = INF
+
 
 def task2(fn):
     schematics = []
@@ -74,35 +77,52 @@ def task2(fn):
             schematics.append([lights, buttons, joltages])
 
 
-    INF = 2**32
-    from functools import cache
-
-    @cache
     def calculate_button_presses(buttonpresses, joltages):
 
+        global current_best
+
         if all([i == 0 for i in joltages]):
+            if buttonpresses < current_best:
+                current_best = buttonpresses
             return buttonpresses
 
+        if buttonpresses >= current_best:
+            return None
+
+        if max(joltages) + buttonpresses >= current_best:
+            return None
+
         if any([i < 0 for i in joltages]):
-            return INF
+            return None
 
         min_presses = INF
         for button in buttons:
-            joltages2 = list(joltages[:])
-            for bi in button:
-                joltages2[bi] -= 1
-            p = calculate_button_presses(buttonpresses+1, tuple(joltages2))
-            if p < min_presses:
-                min_presses = p
+            minp = min([joltages[i] for i in button])
+            for i in range(minp, 0, -1):
+                joltages2 = joltages[:]
+                for bi in button:
+                    joltages2[bi] -= i
+                p = calculate_button_presses(buttonpresses+i, joltages2)
+
+                if p and p < min_presses:
+                    min_presses = p
 
         return min_presses
 
+
     result = 0
     for lights, buttons, joltages in schematics:
-        calculate_button_presses.cache_clear()
-        result += calculate_button_presses(0, tuple(joltages))
-        print('found')
-
+        global current_best
+        current_best = INF
+        buttons = sorted(
+            buttons,
+            key=lambda idx: [joltages[i] for i in idx],
+            reverse=True
+        )
+        buttons = sorted(buttons, key=len, reverse=True)
+        result += calculate_button_presses(0, joltages)
+        print('.', end='')
+    print()
     return result
 
 assert task1('test_input.txt') == 7
