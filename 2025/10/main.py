@@ -81,16 +81,16 @@ def task2(fn):
 
         global current_best
 
-        if all([i == 0 for i in joltages]):
-            if buttonpresses < current_best:
-                current_best = buttonpresses
-            return buttonpresses
-
         if buttonpresses >= current_best:
             return None
 
         if max(joltages) + buttonpresses >= current_best:
             return None
+
+        if all([i == 0 for i in joltages]):
+            if buttonpresses < current_best:
+                current_best = buttonpresses
+            return buttonpresses
 
         if any([i < 0 for i in joltages]):
             return None
