@@ -1,6 +1,3 @@
-from collections import deque
-
-
 def task1(fn):
     schematics = []
     with open(fn) as fh:
@@ -78,7 +75,6 @@ def task2(fn):
 
 
     def calculate_button_presses(buttonpresses, joltages):
-
         global current_best
 
         if buttonpresses >= current_best:
@@ -95,25 +91,50 @@ def task2(fn):
         if any([i < 0 for i in joltages]):
             return None
 
-        min_presses = INF
+        min_presses = None
         for button in buttons:
-            minp = min([joltages[i] for i in button])
-            for i in range(minp, 0, -1):
+            mx = min([joltages[i] for i in button])
+
+            mn = 0
+            for bi in button:
+                # find remaining buttons with that wiring
+                found = False
+                for button2 in buttons[::-1]:
+                    if button == button2:
+                        break
+                    if bi in button2:
+                        found = True
+                        break
+                # minimal button presses for this one
+                if not found:
+                    mn = max(mn, joltages[bi])
+
+            if buttonpresses + mn >= current_best:
+                return current_best
+
+
+
+            for i in range(mx, mn-1, -1):
+                if i == 0:
+                    break
                 joltages2 = joltages[:]
                 for bi in button:
                     joltages2[bi] -= i
                 p = calculate_button_presses(buttonpresses+i, joltages2)
 
-                if p and p < min_presses:
+                if (
+                    p and min_presses is None or
+                    p and p < min_presses
+                ):
                     min_presses = p
 
         return min_presses
 
 
     result = 0
-    for lights, buttons, joltages in schematics:
+    for lights, buttons, joltages in schematics[::-1]:
         global current_best
-        current_best = INF
+        current_best = sum(joltages)
         buttons = sorted(
             buttons,
             key=lambda idx: [joltages[i] for i in idx],
