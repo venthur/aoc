@@ -130,19 +130,39 @@ def task2(fn):
 
         return min_presses
 
+    def reorder_buttons(buttons, joltages):
+        todo = buttons[:]
+        res = []
+        while todo:
+            cnt = [0] * len(joltages)
+            for button in todo:
+                for id in button:
+                    cnt[id] += 1
+            mn = min(x for x in cnt if x > 0)
+            id = cnt.index(mn)
+            next_button = None
+            for button in todo:
+                if id in button:
+                    if next_button is None or len(button) > len(next_button):
+                        next_button = button
+            res.append(next_button)
+            todo.remove(next_button)
+        return res
+
 
     result = 0
-    for lights, buttons, joltages in schematics[::-1]:
+    for lights, buttons, joltages in schematics:
         global current_best
         current_best = sum(joltages)
-        buttons = sorted(
-            buttons,
-            key=lambda idx: [joltages[i] for i in idx],
-            reverse=True
-        )
-        buttons = sorted(buttons, key=len, reverse=True)
+        # buttons = sorted(
+        #     buttons,
+        #     key=lambda idx: [joltages[i] for i in idx],
+        #     reverse=True
+        # )
+        # buttons = sorted(buttons, key=len, reverse=True)
+        buttons = reorder_buttons(buttons, joltages)
         result += calculate_button_presses(0, joltages)
-        print('.', end='')
+        print('.')
     print()
     return result
 
