@@ -46,9 +46,6 @@ def task1(fn):
 
     return result
 
-INF = 2**32
-current_best = INF
-
 
 def task2(fn):
     schematics = []
@@ -71,99 +68,56 @@ def task2(fn):
             data = data2[:-1]
             joltages = [int(i) for i in data.split(',')]
 
-            schematics.append([lights, buttons, joltages])
-
-
-    def calculate_button_presses(buttonpresses, joltages):
-        global current_best
-
-        if buttonpresses >= current_best:
-            return None
-
-        if max(joltages) + buttonpresses >= current_best:
-            return None
-
-        if all([i == 0 for i in joltages]):
-            if buttonpresses < current_best:
-                current_best = buttonpresses
-            return buttonpresses
-
-        if any([i < 0 for i in joltages]):
-            return None
-
-        min_presses = None
-        for button in buttons:
-            mx = min([joltages[i] for i in button])
-
-            mn = 0
-            for bi in button:
-                # find remaining buttons with that wiring
-                found = False
-                for button2 in buttons[::-1]:
-                    if button == button2:
-                        break
-                    if bi in button2:
-                        found = True
-                        break
-                # minimal button presses for this one
-                if not found:
-                    mn = max(mn, joltages[bi])
-
-            if buttonpresses + mn >= current_best:
-                return current_best
-
-
-
-            for i in range(mx, mn-1, -1):
-                if i == 0:
-                    break
-                joltages2 = joltages[:]
-                for bi in button:
-                    joltages2[bi] -= i
-                p = calculate_button_presses(buttonpresses+i, joltages2)
-
-                if (
-                    p and min_presses is None or
-                    p and p < min_presses
-                ):
-                    min_presses = p
-
-        return min_presses
-
-    def reorder_buttons(buttons, joltages):
-        todo = buttons[:]
-        res = []
-        while todo:
-            cnt = [0] * len(joltages)
-            for button in todo:
-                for id in button:
-                    cnt[id] += 1
-            mn = min(x for x in cnt if x > 0)
-            id = cnt.index(mn)
-            next_button = None
-            for button in todo:
-                if id in button:
-                    if next_button is None or len(button) > len(next_button):
-                        next_button = button
-            res.append(next_button)
-            todo.remove(next_button)
-        return res
-
+            buttons = [
+                [1 if i in b else 0 for i in range(len(joltages))]
+                for b
+                in buttons
+            ]
+            schematics.append([buttons, joltages])
 
     result = 0
-    for lights, buttons, joltages in schematics:
-        global current_best
-        current_best = sum(joltages)
-        # buttons = sorted(
-        #     buttons,
-        #     key=lambda idx: [joltages[i] for i in idx],
-        #     reverse=True
-        # )
-        # buttons = sorted(buttons, key=len, reverse=True)
-        buttons = reorder_buttons(buttons, joltages)
-        result += calculate_button_presses(0, joltages)
-        print('.')
-    print()
+    for buttons, joltages in schematics:
+
+        # reorder buttons
+        buttons = sorted(buttons, key=sum)
+
+        current_best = None
+        todo = [(0, joltages[:])]
+        while todo:
+            # print(current_best, len(todo))
+            # print(todo)
+            presses, joltages = todo.pop()
+
+            if all(j == 0 for j in joltages):
+                if current_best is None or presses < current_best:
+                    current_best = presses
+                    todo = [
+                        (pt, jt) for pt, jt in todo 
+                        if pt + max(jt) < current_best
+                    ]
+                    print(f' {presses}')
+                    continue
+
+            for b in buttons:
+                joltages2 = joltages[:]
+                i = 0
+                while True:
+                    joltages2 = [x - y for x, y in zip(joltages2, b)]
+                    i += 1
+                    # too far?
+                    if any(v < 0 for v in joltages2):
+                        break
+                    # too many presses required?
+                    if (
+                        current_best and
+                        i + presses + max(joltages2) >= current_best
+                    ):
+                        break
+                    todo.append((presses+i, joltages2))
+
+        print(current_best)
+        result += current_best
+
     return result
 
 assert task1('test_input.txt') == 7
