@@ -77,6 +77,8 @@ def task2(fn):
             ]
             schematics.append([buttons, joltages])
 
+    schematics.sort(key=lambda x: sum(x[1]), reverse=True)
+
     result = 0
     for buttons, joltages in schematics:
 
@@ -158,6 +160,11 @@ def task2(fn):
                         i + presses + max(joltages2) >= current_best
                     ):
                         break
+                    # impossible to solve?
+                    buttons2 = [buttons[i] for i in range(len(buttons)) if i not in (used + [bi])]
+                    still_pressable = [1 in x for x in zip(*buttons2)]
+                    if not all(c > 0 and p or c == 0 for p, c in zip(still_pressable, joltages2)):
+                        continue
                     todo.append((presses+i, joltages2, used + [bi]))
 
         print(f'{current_best} {time()-t0:.1f}s')
