@@ -102,18 +102,6 @@ def task2(fn):
                     buttons2.append(buttons[bi])
         buttons = buttons2[::-1]
 
-        # # last wirings per button
-        # last = [[] for i in range(len(buttons))]
-        # for bi, b in enumerate(buttons):
-        #     for bvi, bb in enumerate(b):
-        #         if bb == 0:
-        #             continue
-        #         for bii in range(bi+1, len(buttons)):
-        #             if buttons[bii][bvi] == 1:
-        #                 break
-        #         else:
-        #             last[bi].append(bvi)
-
         t0 = time()
         current_best = None
         todo = [(0, joltages[:], [])]
@@ -135,20 +123,9 @@ def task2(fn):
             for bi, b in enumerate(buttons):
                 if bi in used:
                     continue
-                # mx = min(joltages[bi] for bi, bv in enumerate(b) if bv == 1)
-                # lastj = [joltages[i] for i in last[bi]]
-                # if lastj:
-                #     mn = max(joltages[i] for i in last[bi])
-                # else:
-                #     mn = 1
-                # if mn > mx:
-                #     break
                 joltages2 = joltages[:]
                 i = 0
                 while True:
-                # if mn == 0:
-                #     mn += 1
-                # for i in range(1, mx+1):
                     joltages2 = [x - y for x, y in zip(joltages2, b)]
                     i += 1
                     # too far?
@@ -161,11 +138,12 @@ def task2(fn):
                     ):
                         break
                     # impossible to solve?
-                    buttons2 = [buttons[i] for i in range(len(buttons)) if i not in (used + [bi])]
+                    used2 = used + [bi]
+                    buttons2 = [buttons[i] for i in range(len(buttons)) if i not in used2]
                     still_pressable = [1 in x for x in zip(*buttons2)]
                     if not all(c > 0 and p or c == 0 for p, c in zip(still_pressable, joltages2)):
                         continue
-                    todo.append((presses+i, joltages2, used + [bi]))
+                    todo.append((presses+i, joltages2, used2))
 
         print(f'{current_best} {time()-t0:.1f}s')
         result += current_best
