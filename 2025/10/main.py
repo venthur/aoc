@@ -78,9 +78,9 @@ def task2(fn):
             schematics.append([buttons, joltages])
 
     # biggest first
-    schematics.sort(key=lambda x: sum(x[1]), reverse=True)
+    # schematics.sort(key=lambda x: sum(x[1]), reverse=True)
     # smallest first
-    # schematics.sort(key=lambda x: sum(x[1]))
+    schematics.sort(key=lambda x: sum(x[1]))
 
     result = 0
     for buttons, joltages in schematics:
@@ -126,24 +126,20 @@ def task2(fn):
             for bi, b in enumerate(buttons):
                 if bi in used:
                     continue
+                mx = min(joltages[bi] for bi, bv in enumerate(b) if bv == 1)
                 joltages2 = joltages[:]
-                i = 0
-                while True:
+                used2 = used + [bi]
+                buttons2 = [buttons[i] for i in range(len(buttons)) if i not in used2]
+                still_pressable = [1 in x for x in zip(*buttons2)]
+
+                for i in range(1, mx+1):
                     joltages2 = [x - y for x, y in zip(joltages2, b)]
-                    i += 1
-                    # too far?
-                    if any(v < 0 for v in joltages2):
-                        break
-                    # too many presses required?
                     if (
                         current_best and
                         i + presses + max(joltages2) >= current_best
                     ):
                         break
                     # impossible to solve?
-                    used2 = used + [bi]
-                    buttons2 = [buttons[i] for i in range(len(buttons)) if i not in used2]
-                    still_pressable = [1 in x for x in zip(*buttons2)]
                     if not all(c > 0 and p or c == 0 for p, c in zip(still_pressable, joltages2)):
                         continue
                     todo.append((presses+i, joltages2, used2))
