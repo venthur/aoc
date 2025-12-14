@@ -77,30 +77,33 @@ def task2(fn):
             ]
             schematics.append([buttons, joltages])
 
+    # biggest first
     schematics.sort(key=lambda x: sum(x[1]), reverse=True)
+    # smallest first
+    # schematics.sort(key=lambda x: sum(x[1]))
 
     result = 0
     for buttons, joltages in schematics:
 
-        # reorder buttons
-        #buttons = sorted(buttons, key=sum)
-
-        # reorder buttons by wirings
-        x = [[] for _ in range(len(joltages))]
-        for ji in range(len(joltages)):
-            for bi, b in enumerate(buttons):
-                if b[ji] == 1:
-                    x[ji].append((bi, sum(b)))
-
-        for xi, xx in enumerate(x):
-            x[xi] = sorted(xx, key=lambda v: -v[-1])
-        x.sort(key=len)
-        buttons2 = []
-        for l in x:
-            for bi, _ in l:
-                if buttons[bi] not in buttons2:
-                    buttons2.append(buttons[bi])
-        buttons = buttons2[::-1]
+        # reorder buttons by rarity wirings, and number of wirings
+        todo = buttons[:]
+        res = []
+        while todo:
+            cnt = [0] * len(joltages)
+            for button in todo:
+                for id, v in enumerate(button):
+                    if v == 1:
+                        cnt[id] += 1
+            mn = min(x for x in cnt if x > 0)
+            id = cnt.index(mn)
+            next_button = None
+            for button in todo:
+                if button[id] == 1:
+                    if next_button is None or sum(button) > sum(next_button):
+                        next_button = button
+            res.append(next_button)
+            todo.remove(next_button)
+        buttons = res[::-1]
 
         t0 = time()
         current_best = None
