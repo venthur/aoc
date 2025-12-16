@@ -1,3 +1,6 @@
+from itertools import combinations
+from functools import cache
+
 def task1(fn):
     schematics = []
     with open(fn) as fh:
@@ -47,8 +50,6 @@ def task1(fn):
     return result
 
 
-from time import time
-
 def task2(fn):
     schematics = []
     with open(fn) as fh:
@@ -77,75 +78,38 @@ def task2(fn):
             ]
             schematics.append([buttons, joltages])
 
-    # biggest first
-    # schematics.sort(key=lambda x: sum(x[1]), reverse=True)
-    # smallest first
-    schematics.sort(key=lambda x: sum(x[1]))
+    def patterns(buttons):
+        out = {}
+        out[tuple(0 for _ in range(len(buttons[0])))] = 0
+        for pattern_len in range(1, len(buttons)+1):
+            for button_combo in combinations(buttons, pattern_len):
+                pattern = tuple(map(sum, zip(*button_combo)))
+                if pattern not in out:
+                    out[pattern] = pattern_len
+
+        return out
+
+    def solve(buttons, joltage):
+
+        pattern_costs = patterns(buttons)
+
+        @cache
+        def solve_r(joltage):
+            if all(i == 0 for i in joltage):
+                return 0
+            res = 100000000
+            for pattern, cost in pattern_costs.items():
+                if all(i <= j and i % 2 == j % 2 for i, j in zip(pattern, joltage)):
+                    joltage2 = tuple((j - i)//2 for i, j in zip(pattern, joltage))
+                    res = min(res, cost + 2 * solve_r(joltage2))
+            return res
+
+        return solve_r(joltage)
 
     result = 0
     for buttons, joltages in schematics:
-
-        # reorder buttons by rarity wirings, and number of wirings
-        todo = buttons[:]
-        res = []
-        while todo:
-            cnt = [0] * len(joltages)
-            for button in todo:
-                for id, v in enumerate(button):
-                    if v == 1:
-                        cnt[id] += 1
-            mn = min(x for x in cnt if x > 0)
-            id = cnt.index(mn)
-            next_button = None
-            for button in todo:
-                if button[id] == 1:
-                    if next_button is None or sum(button) > sum(next_button):
-                        next_button = button
-            res.append(next_button)
-            todo.remove(next_button)
-        buttons = res[::-1]
-
-        t0 = time()
-        current_best = None
-        todo = [(0, joltages[:], [])]
-        while todo:
-            # print(current_best, len(todo))
-            # print(todo)
-            presses, joltages, used = todo.pop()
-
-            if all(j == 0 for j in joltages):
-                if current_best is None or presses < current_best:
-                    current_best = presses
-                    todo = [
-                        (pt, jt, ut) for pt, jt, ut in todo
-                        if pt + max(jt) < current_best
-                    ]
-                    print(f' {presses}')
-                    continue
-
-            for bi, b in enumerate(buttons):
-                if bi in used:
-                    continue
-                mx = min(joltages[bi] for bi, bv in enumerate(b) if bv == 1)
-                joltages2 = joltages[:]
-                used2 = used + [bi]
-                buttons2 = [buttons[i] for i in range(len(buttons)) if i not in used2]
-                still_pressable = [1 in x for x in zip(*buttons2)]
-
-                for i in range(1, mx+1):
-                    joltages2 = [x - y for x, y in zip(joltages2, b)]
-                    if (
-                        current_best and
-                        i + presses + max(joltages2) >= current_best
-                    ):
-                        break
-                    # impossible to solve?
-                    if not all(c > 0 and p or c == 0 for p, c in zip(still_pressable, joltages2)):
-                        continue
-                    todo.append((presses+i, joltages2, used2))
-
-        print(f'{current_best} {time()-t0:.1f}s')
-        result += current_best
+        res = solve(buttons, tuple(joltages))
+        result += res
 
     return result
 
@@ -153,5 +117,4 @@ assert task1('test_input.txt') == 7
 print(task1('input.txt'))
 
 assert task2('test_input.txt') == 33
-print()
 print(task2('input.txt'))
