@@ -110,8 +110,8 @@ def task1(fn):
             continue
 
         if does_fit(area, todo):
-            print('fits')
             counter += 1
+            print(f'fits ({counter})')
 
     return counter
 
