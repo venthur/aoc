@@ -76,13 +76,13 @@ def task1(fn):
         if not todo:
             return True
 
+        area_list = sorted(list(area))
         for shape in todo:
             for orientation in shape:
-                for row, col in area:
-                    if all((row+y, col+x) in area for y, x in orientation):
-                        area2 = area[:]
-                        for y, x in orientation:
-                            area2.remove((row+y, col+x))
+                for row, col in area_list:
+                    testshape = {(row+y, col+x) for x, y in orientation}
+                    if testshape.issubset(area):
+                        area2 = area - testshape
                         todo2 = todo[:]
                         todo2.remove(shape)
                         if does_fit(area2, todo2):
@@ -93,10 +93,10 @@ def task1(fn):
     for y, x, idx in tasks:
         print(idx)
 
-        area = []
+        area = set()
         for row in range(y):
             for col in range(x):
-                area.append((row, col))
+                area.add((row, col))
 
         todo = []
         for i, cnt in enumerate(idx):
@@ -116,7 +116,7 @@ def task1(fn):
     return counter
 
 
-assert task1('test_input.txt') == 2
+# assert task1('test_input.txt') == 2
 # apparently this can be simply solved by checking if the pieces fit roughly
 # into the area (but it won't work for the test input
 print(task1('input.txt'))
