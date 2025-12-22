@@ -15,3 +15,4 @@ solutions are in Python, no external dependencies.
 | 2022 | 50 |
 | 2023 | 50 |
 | 2024 | 50 |
+| 2025 | 24 |
