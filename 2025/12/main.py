@@ -116,7 +116,7 @@ def task1(fn):
     return counter
 
 
-# assert task1('test_input.txt') == 2
+assert task1('test_input.txt') == 2
 # apparently this can be simply solved by checking if the pieces fit roughly
 # into the area (but it won't work for the test input
 print(task1('input.txt'))
